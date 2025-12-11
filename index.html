@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>ESCAPE ROOM: The Christmas Retail Rescue</title>
+  <style>
+    :root{
+      --bg:#0e1020; --card:#171a2b; --card2:#1f2340; --line:#2a2f55;
+      --text:#e7e9f5; --muted:#aab0d6; --accent:#7c5cff;
+      --good:#3ddc97; --bad:#ff6b6b; --warn:#ffd166;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1b1f3a, transparent),
+        radial-gradient(900px 600px at 110% 10%, #20255a, transparent),
+        var(--bg);
+      color:var(--text); min-height:100vh; padding:24px; display:grid; place-items:center;
+    }
+    .wrap{width:min(1050px,100%); display:grid; gap:16px;}
+    header{
+      background:linear-gradient(135deg,var(--card),var(--card2));
+      border:1px solid var(--line); border-radius:16px; padding:18px 20px;
+      display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    }
+    header h1{margin:0; font-size:clamp(20px,3vw,30px)}
+    header .sub{color:var(--muted); font-size:14px}
+
+    .story{
+      background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;
+      line-height:1.6; color:var(--muted);
+    }
+    .story b{color:var(--text)}
+
+    .grid{display:grid; grid-template-columns:1fr; gap:16px;}
+    @media(min-width:820px){ .grid{grid-template-columns:1fr 1fr;} }
+
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px;
+      display:grid; gap:10px; position:relative; overflow:hidden;
+    }
+    .card h2{margin:0; font-size:18px}
+    .card p{margin:0; color:var(--muted); line-height:1.5}
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; font-size:12px; text-transform:uppercase;
+      background:#22264a; border:1px solid #2f3561; padding:6px 9px; border-radius:999px;
+      color:var(--muted); width:fit-content;
+    }
+    .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--warn)}
+    .pill.done .dot{background:var(--good)}
+    .pill.locked .dot{background:var(--accent)}
+
+    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    input[type="text"], input[type="number"]{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid #323861;
+      background:#0f1330; color:var(--text); font-size:16px; outline:none;
+    }
+    input:focus{border-color:var(--accent); box-shadow:0 0 0 3px rgba(124,92,255,.2)}
+    button{
+      width:100%; cursor:pointer; padding:10px 12px; border-radius:10px; font-weight:600;
+      border:1px solid #3a4180; color:var(--text);
+      background:linear-gradient(180deg,#2a2f62,#232756);
+      transition:transform .05s ease,border-color .2s ease,opacity .2s ease;
+    }
+    button:hover{border-color:var(--accent)}
+    button:active{transform:translateY(1px)}
+    button.secondary{background:transparent; border-color:#2f3561; color:var(--muted); font-weight:500}
+
+    .feedback{
+      font-size:14px; padding:10px 12px; border-radius:10px;
+      border:1px dashed #2f3561; background:#111538; color:var(--muted);
+    }
+    .feedback.good{border-color:rgba(61,220,151,.6); color:var(--good); background:rgba(61,220,151,.08)}
+    .feedback.bad{border-color:rgba(255,107,107,.6); color:var(--bad); background:rgba(255,107,107,.08)}
+
+    .locked-overlay{
+      position:absolute; inset:0; background:rgba(12,14,28,.86); backdrop-filter:blur(2px);
+      display:grid; place-items:center; text-align:center; padding:18px; gap:8px;
+    }
+    .locked-overlay .icon{font-size:28px}
+    .hidden{display:none!important}
+    .dim{opacity:.25; pointer-events:none; user-select:none}
+
+    ul{margin:0 0 0 18px; color:var(--muted)}
+    .mini{
+      font-size:12px; color:var(--muted); line-height:1.5;
+      background:#0f1330; border:1px dashed #2f3561; padding:8px 10px; border-radius:10px;
+    }
+
+    footer{color:var(--muted); font-size:12px; text-align:center; margin-top:4px}
+    .codebox{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing:.5px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>ESCAPE ROOM: The Christmas Retail Rescue</h1>
+        <div class="sub">Los alle 7 puzzels op om BrightStar Retail te redden vóór middernacht.</div>
+      </div>
+      <div class="pill" id="progressPill"><span class="dot"></span> Voortgang: 0/7</div>
+    </header>
+
+    <section class="story">
+      <b>Storyline</b><br>
+      Het is 23 december. BrightStar Retail (een populaire kerstcadeauwinkel) zit in de problemen:
+      een sneeuwstorm blokkeert leveringen, het digitale systeem is gecrasht en de kerst-avond-sale
+      dreigt niet door te gaan.<br><br>
+      Als tijdelijke <b>Holiday Economic Assistants</b> is jullie missie om:
+      <ol>
+        <li>De logistiek/voorraad weer op orde te krijgen</li>
+        <li>Budgetten te herberekenen</li>
+        <li>Met leveranciers te communiceren</li>
+        <li>Marketinguitdagingen op te lossen</li>
+        <li>De kerst-sale weer online te brengen vóór middernacht</li>
+      </ol>
+      Alleen door alle 7 puzzels op te lossen, ontgrendel je de eindcode en red je Kerstmis.
+    </section>
+
+    <section class="grid">
+
+      <!-- PUZZLE 1 -->
+      <div class="card" id="card1">
+        <div class="pill" id="status1"><span class="dot"></span> Puzzle 1</div>
+        <h2>Puzzle 1 — Delivery Delay Report (Reading)</h2>
+        <p><b>Report:</b><br>
+          “Due to heavy snowfall, Delivery Batch #241 (Smartwatches, Headphones, Gift Sets) has been delayed for 12 hours.
+          Current stock in-store is: smartwatches 14 units, headphones 22 units, gift sets 9 units.
+          Expected customer demand for the Christmas Eve sale is 30% higher than last year.”
+        </p>
+        <p><b>Questions:</b></p>
+        <ol>
+          <li>Which three products are delayed?</li>
+          <li>What is the current stock of gift sets?</li>
+          <li>Why is this delay a problem for the sale?</li>
+        </ol>
+        <p class="mini">Secret clue: circle the first letter of each answer → 3-letter code.</p>
+
+        <div class="row">
+          <input id="answer1" type="text" placeholder="Vul de 3-letter code in (bijv. ABC)..." />
+          <button id="check1">Controleer</button>
+        </div>
+        <div id="fb1" class="feedback">Tip: neem de eerste letters van je drie antwoorden.</div>
+
+        <div class="locked-overlay hidden" id="lock1">
+          <div class="icon">✅</div>
+          <h3 style="margin:0;">Puzzle 1 opgelost</h3>
+        </div>
+      </div>
+
+      <!-- PUZZLE 2 -->
+      <div class="card" id="card2">
+        <div class="pill locked" id="status2"><span class="dot"></span> Puzzle 2</div>
+        <h2>Puzzle 2 — Customer Hotline Message (Listening)</h2>
+
+        <div id="content2" class="dim">
+          <p>Scan de QR-code, luister naar de voicemail en vul de ontbrekende informatie aan.</p>
+          <p><b>Audio script (B1):</b><br>
+            “Hello BrightStar Retail, this is Anna from North Supply. I’m calling about your Christmas order.
+            We can deliver the Christmas candles tonight, but the shipping fee will be €45 instead of €25
+            because of road closures. Please confirm before 6 PM. Thank you!”
+          </p>
+
+          <ul>
+            <li>Who is calling?</li>
+            <li>What product can be delivered?</li>
+            <li>What is the new shipping fee?</li>
+            <li>Why is there an extra cost?</li>
+          </ul>
+
+          <div class="row">
+            <input id="answer2" type="number" inputmode="numeric" placeholder="Secret number..." />
+            <button id="check2">Controleer</button>
+          </div>
+          <div id="fb2" class="feedback">Vul het geheim nummer uit de voicemail in.</div>
+        </div>
+
+        <div class="locked-overlay" id="lock2">
+          <div class="icon">🔒</div>
+          <h3 style="margin:0;">Puzzle 2 nog vergrendeld</h3>
+          <p>Los eerst Puzzle 1 op.</p>
+        </div>
+      </div>
+
+      <!-- PUZZLE 3 -->
+      <div class="card" id="card3">
+        <div class="pill locked" id="status3"><span class="dot"></span> Puzzle 3</div>
+        <h2>Puzzle 3 — Supplier Negotiation Roleplay (Speaking)</h2>
+
+        <div id="content3" class="dim">
+          <p>Werk in tweetallen en speel een kort telefoongesprek na:</p>
+          <ul>
+            <li><b>Student A</b> = Store manager</li>
+            <li><b>Student B</b> = Supplier</li>
+          </ul>
+          <p><b>Goal:</b> onderhandel een <b>10% korting</b> wegens leververtragingen. Als dat lukt, krijg je een geheim woord.</p>
+          <p class="mini">Teacher checkt de roleplay en geeft het geheime woord.</p>
+
+          <div class="row">
+            <input id="answer3" type="text" placeholder="Secret word..." />
+            <button id="check3">Controleer</button>
+          </div>
+          <div id="fb3" class="feedback">Vul het geheime woord in dat je hebt gekregen.</div>
+        </div>
+
+        <div class="locked-overlay" id="lock3">
+          <div class="icon">🔒</div>
+          <h3 style="margin:0;">Puzzle 3 nog vergrendeld</h3>
+          <p>Los eerst Puzzle 2 op.</p>
+        </div>
+      </div>
+
+      <!-- PUZZLE 4 -->
+      <div class="card" id="card4">
+        <div class="pill locked" id="status4"><span class="dot"></span> Puzzle 4</div>
+        <h2>Puzzle 4 — Marketing Challenge (Reading + Writing)</h2>
+
+        <div id="content4" class="dim">
+          <p>Het kerstposterbestand is verdwenen. Ontwerp snel een vervanger met deze keywords:</p>
+          <ul>
+            <li>20% Holiday Discount</li>
+            <li>Last-Minute Gifts</li>
+            <li>Free Wrapping Service</li>
+            <li>Christmas Eve Only</li>
+          </ul>
+          <p>Je poster moet:</p>
+          <ul>
+            <li>een slogan bevatten</li>
+            <li>jonge volwassenen aanspreken</li>
+            <li>één economisch werkwoord gebruiken (buy/save/spend)</li>
+          </ul>
+          <p class="mini">Secret clue: neem de eerste letter van elk keyword → code.</p>
+
+          <div class="row">
+            <input id="answer4" type="text" placeholder="4-tekens code..." />
+            <button id="check4">Controleer</button>
+          </div>
+          <div id="fb4" class="feedback">Vul de code in die je uit de keywords haalt.</div>
+        </div>
+
+        <div class="locked-overlay" id="lock4">
+          <div class="icon">🔒</div>
+          <h3 style="margin:0;">Puzzle 4 nog vergrendeld</h3>
+          <p>Los eerst Puzzle 3 op.</p>
+        </div>
+      </div>
+
+      <!-- PUZZLE 5 -->
+      <div class="card" id="card5">
+        <div class="pill locked" id="status5"><span class="dot"></span> Puzzle 5</div>
+        <h2>Puzzle 5 — Budgeting Puzzle (Math + English)</h2>
+
+        <div id="content5" class="dim">
+          <p>De winkel verkoopt:</p>
+          <ul>
+            <li>Smart Christmas Mugs (€8 each)</li>
+            <li>LED Snow Globes (€15 each)</li>
+            <li>Luxury Gift Sets (€22 each)</li>
+          </ul>
+          <p>Bereken de totale opbrengst als er verkocht wordt:</p>
+          <ul>
+            <li>12 mugs</li>
+            <li>8 snow globes</li>
+            <li>5 gift sets</li>
+          </ul>
+          <div class="row">
+            <input id="answer5" type="number" inputmode="numeric" placeholder="Totale revenue (€)..." />
+            <button id="check5">Controleer</button>
+          </div>
+          <div id="fb5" class="feedback">Reken alles uit en tel op.</div>
+        </div>
+
+        <div class="locked-overlay" id="lock5">
+          <div class="icon">🔒</div>
+          <h3 style="margin:0;">Puzzle 5 nog vergrendeld</h3>
+          <p>Los eerst Puzzle 4 op.</p>
+        </div>
+      </div>
+
+      <!-- PUZZLE 6 -->
+      <div class="card" id="card6">
+        <div class="pill locked" id="status6"><span class="dot"></span> Puzzle 6</div>
+        <h2>Puzzle 6 — QR-CODE Mystery Room (Digital)</h2>
+
+        <div id="content6" class="dim">
+          <p>Scan 4 QR-codes in het lokaal. Elke code geeft één term:</p>
+          <ul>
+            <li>Revenue</li>
+            <li>Customer Loyalty</li>
+            <li>Stock Level</li>
+            <li>Logistics</li>
+          </ul>
+          <p>Maak één Engelse zin met alle 4 termen. De docent geeft daarna het geheime woord.</p>
+          <p class="mini">Teacher approval → secret word.</p>
+
+          <div class="row">
+            <input id="answer6" type="text" placeholder="Secret word..." />
+            <button id="check6">Controleer</button>
+          </div>
+          <div id="fb6" class="feedback">Vul het geheime woord in dat je van de docent krijgt.</div>
+        </div>
+
+        <div class="locked-overlay" id="lock6">
+          <div class="icon">🔒</div>
+          <h3 style="margin:0;">Puzzle 6 nog vergrendeld</h3>
+          <p>Los eerst Puzzle 5 op.</p>
+        </div>
+      </div>
+
+      <!-- PUZZLE 7 -->
+      <div class="card" id="card7" style="grid-column:1/-1;">
+        <div class="pill locked" id="status7"><span class="dot"></span> Puzzle 7</div>
+        <h2>Puzzle 7 — Final Lock: The Christmas Vault</h2>
+
+        <div id="content7" class="dim">
+          <p>Combineer alle eerdere codes:</p>
+          <ul>
+            <li>Puzzle 1: <span class="codebox">SND</span></li>
+            <li>Puzzle 2: <span class="codebox">45</span></li>
+            <li>Puzzle 3: <span class="codebox">RETAIL</span></li>
+            <li>Puzzle 4: <span class="codebox">2LFC</span></li>
+            <li>Puzzle 5: <span class="codebox">326</span></li>
+            <li>Puzzle 6: <span class="codebox">LOYAL</span></li>
+          </ul>
+
+          <p><b>Final decoding rule:</b></p>
+          <ul>
+            <li>Neem het getal van Puzzle 2</li>
+            <li>Tel het getal van Puzzle 5 erbij op</li>
+            <li>Tel het aantal letters van Puzzle 3 clue</li>
+            <li>Herschik Puzzle 6 word om de sleutel te vinden</li>
+          </ul>
+
+          <div class="row">
+            <input id="answer7" type="text" placeholder="Eindcode (bijv. 1234-WORD)..." />
+            <button id="check7">Ontgrendel kluis</button>
+          </div>
+          <div id="fb7" class="feedback">Vul de eindcode in.</div>
+
+          <div id="finalSuccess" class="feedback good hidden" style="margin-top:8px;">
+            🎄 <b>Gefeliciteerd!</b> De kerst-sale is gered. BrightStar kan weer open voor Christmas Eve!
+          </div>
+        </div>
+
+        <div class="locked-overlay" id="lock7">
+          <div class="icon">🔒</div>
+          <h3 style="margin:0;">Final Lock nog vergrendeld</h3>
+          <p>Los eerst Puzzle 6 op.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <footer>Alles in één HTML-bestand • Docent kan altijd codes aanpassen in de script-sectie.</footer>
+  </div>
+
+  <script>
+    // ======== Antwoord-sleutels (pas hier aan indien nodig) ========
+    const KEYS = {
+      1: "SND",
+      2: "45",
+      3: "RETAIL",
+      4: "2LFC",
+      5: "326",
+      6: "LOYAL",
+      7: "3716-LOYAL"
+    };
+
+    // ======== Helper functies ========
+    function normalize(val){ return String(val).trim().toUpperCase(); }
+    function setFeedback(n, text, type){
+      const el = document.getElementById(`fb${n}`);
+      el.textContent = text;
+      el.className = "feedback" + (type ? " " + type : "");
+    }
+    function setStatus(n, state){ // state: "locked" | "done" | "open"
+      const pill = document.getElementById(`status${n}`);
+      pill.className = "pill" +
+        (state === "locked" ? " locked" : state === "done" ? " done" : "");
+    }
+    function unlock(n){
+      // unlock puzzle n (show content, hide lock overlay)
+      document.getElementById(`lock${n}`).classList.add("hidden");
+      const content = document.getElementById(`content${n}`);
+      if(content) content.classList.remove("dim");
+      setStatus(n, "open");
+      updateProgress();
+    }
+    function complete(n){
+      setStatus(n, "done");
+      const lock = document.getElementById(`lock${n}`);
+      if(lock && n !== 1) lock.classList.add("hidden");
+      updateProgress();
+    }
+    function updateProgress(){
+      let done = 0;
+      for(let i=1;i<=7;i++){
+        if(document.getElementById(`status${i}`).classList.contains("done")) done++;
+      }
+      const pill = document.getElementById("progressPill");
+      pill.innerHTML = `<span class="dot"></span> Voortgang: ${done}/7`;
+      pill.className = "pill" + (done===7 ? " done" : "");
+      if(done===7){
+        document.getElementById("finalSuccess").classList.remove("hidden");
+      }
+    }
+
+    // ======== Check handlers ========
+    function checkPuzzle(n, next){
+      const input = document.getElementById(`answer${n}`);
+      const val = normalize(input.value);
+      const key = normalize(KEYS[n]);
+
+      if(!val){
+        setFeedback(n, "Vul iets in voordat je controleert.", "bad");
+        return;
+      }
+
+      if(val === key){
+        setFeedback(n, "✅ Correct! Goed gedaan.", "good");
+        complete(n);
+        if(next) unlock(next);
+        if(n===1) document.getElementById("lock1").classList.remove("hidden");
+      } else {
+        setFeedback(n, "❌ Niet goed. Probeer opnieuw.", "bad");
+      }
+    }
+
+    // ======== Event listeners ========
+    document.getElementById("check1").addEventListener("click", ()=>checkPuzzle(1,2));
+    document.getElementById("check2").addEventListener("click", ()=>checkPuzzle(2,3));
+    document.getElementById("check3").addEventListener("click", ()=>checkPuzzle(3,4));
+    document.getElementById("check4").addEventListener("click", ()=>checkPuzzle(4,5));
+    document.getElementById("check5").addEventListener("click", ()=>checkPuzzle(5,6));
+    document.getElementById("check6").addEventListener("click", ()=>checkPuzzle(6,7));
+    document.getElementById("check7").addEventListener("click", ()=>checkPuzzle(7,null));
+
+    // Enter-to-check op alle inputs
+    for(let i=1;i<=7;i++){
+      const inp=document.getElementById(`answer${i}`);
+      if(!inp) continue;
+      inp.addEventListener("keydown",(e)=>{
+        if(e.key==="Enter"){
+          const btn=document.getElementById(`check${i}`);
+          if(btn) btn.click();
+        }
+      });
+    }
+
+    // Start: alleen puzzle 1 open
+    unlock(1);
+    setStatus(1,"open");
+    for(let i=2;i<=7;i++) setStatus(i,"locked");
+    updateProgress();
+  </script>
+</body>
+</html>
